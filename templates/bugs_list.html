@@ -1,0 +1,313 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Projects - TrackVerse</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+  <nav class="navbar navbar-light bg-white shadow-sm">
+    <div class="container">
+      <a class="navbar-brand" href="/">TrackVerse</a>
+      <div>
+        <a class="btn btn-sm btn-outline-secondary" href="/dashboard">Dashboard</a>
+        <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>Projects</h3>
+      <!-- added explicit type to prevent accidental submits in some contexts -->
+      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#projectModal">New Project</button>
+    </div>
+
+    <div id="flash" class="mb-2"></div>
+
+    <div id="projectsList" class="row g-3"></div>
+  </div>
+
+  <!-- Project Modal -->
+  <div class="modal fade" id="projectModal" tabindex="-1">
+    <div class="modal-dialog">
+      <form id="projectForm" class="modal-content">
+        <div class="modal-header"><h5 class="modal-title">Create Project</h5><button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+        <div class="modal-body">
+          <div class="mb-2"><label class="form-label">Title</label><input id="proj_title" name="title" class="form-control" required></div>
+          <div class="mb-2"><label class="form-label">Description</label><textarea id="proj_desc" name="description" class="form-control"></textarea></div>
+          <div class="mb-2">
+            <label class="form-label">Assign To</label>
+            <select id="proj_assign" name="assignee_id" class="form-select">
+              <option value="">Unassigned</option>
+            </select>
+          </div>
+          <div class="row">
+            <div class="col"><label class="form-label">Start Date</label><input id="proj_start" name="start_date" type="date" class="form-control"></div>
+            <div class="col"><label class="form-label">Deadline</label><input id="proj_deadline" name="deadline" type="date" class="form-control"></div>
+          </div>
+        </div>
+        <div class="modal-footer"><button type="submit" class="btn btn-primary">Save</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- include bootstrap JS (bundle includes Popper) so modals/data-bs-* work -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+  // improved token helper: check multiple storage keys, query param and cookie
+  function getToken() {
+    // include "tv_token" (used by auth.js) plus common names
+    const keys = ['tv_token','token','access_token','jwt','authToken'];
+    for (const k of keys) {
+      const v = localStorage.getItem(k);
+      if (v) return v;
+    }
+    // check query param ?token=...
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('token')) return params.get('token');
+      if (params.get('tv_token')) return params.get('tv_token');
+    } catch(e){}
+    // avoid reading cookies when on /login to prevent stale cookie -> redirect loops
+    if (window.location.pathname !== '/login') {
+      try {
+        const match = document.cookie.match(/(?:^|;\s*)(?:tv_token|token|access_token|jwt|authToken)=([^;]+)/);
+        if (match) return decodeURIComponent(match[1]);
+      } catch(e){}
+    }
+    return '';
+  }
+
+  function tokenHeader() {
+    const t = getToken();
+    return t ? { 'Authorization': 'Bearer ' + t } : {};
+  }
+
+  // safeRedirect prevents fast ping-pong between two pages (detects direct and reciprocal redirects)
+  function safeRedirect(url) {
+    try {
+      const key = '__lastRedirect';
+      const now = Date.now();
+      const prev = JSON.parse(sessionStorage.getItem(key) || 'null');
+      const THRESHOLD = 3000; // ms - increased tolerance to avoid flicker
+
+      if (prev && (now - prev.at) < THRESHOLD) {
+        // direct repeat: same from->to happening too soon
+        if (prev.from === window.location.pathname && prev.to === url) {
+          console.warn('Prevented redirect loop (repeat) to', url);
+          return;
+        }
+        // reciprocal: previous attempt was the reverse pair (A->B then B->A)
+        if (prev.from === url && prev.to === window.location.pathname) {
+          console.warn('Prevented reciprocal redirect loop between', window.location.pathname, 'and', url);
+          return;
+        }
+      }
+
+      // record this redirect attempt and perform it
+      sessionStorage.setItem(key, JSON.stringify({ from: window.location.pathname, to: url, at: now }));
+    } catch (e) {
+      // best-effort: if storage fails, proceed with redirect
+      console.warn('safeRedirect storage failure, proceeding', e);
+    }
+    window.location.href = url;
+  }
+
+  function handleAuthFail(msg) {
+    // show helpful message then redirect (use safeRedirect)
+    if (msg) flash(msg, 'warning', 2500);
+    // clear local storage tokens; keep cookie-clearing conservative
+    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('tv_token');
+    // If already on login page, don't redirect (prevents refreshing /login -> loop)
+    if (window.location.pathname === '/login') return;
+    safeRedirect('/login');
+  }
+  function flash(msg, kind='info', timeout=4000) {
+    const el = document.getElementById('flash');
+    el.innerHTML = `<div class="alert alert-${kind}">${msg}</div>`;
+    if (timeout) setTimeout(()=>{ el.innerHTML=''; }, timeout);
+  }
+
+  // DOM refs
+  const projectsList = document.getElementById('projectsList');
+  const projectForm = document.getElementById('projectForm');
+  const projectModalEl = document.getElementById('projectModal');
+
+  // helper to parse error body safely
+  async function parseErrorBody(res) {
+    try {
+      return await res.json();
+    } catch(e){
+      try { return { msg: await res.text() }; } catch(e2){ return { msg: 'Unknown error' }; }
+    }
+  }
+
+  // load projects
+  async function loadProjects() {
+    try {
+      const res = await fetch('/api/bugs/projects', { headers: { ...tokenHeader() } });
+      if (res.status === 401) {
+        const err = await parseErrorBody(res);
+        return handleAuthFail(err.msg || 'Unauthorized');
+      }
+      if (!res.ok) {
+        const err = await parseErrorBody(res);
+        throw new Error(err.msg || 'Failed to load projects');
+      }
+      const arr = await res.json();
+      renderProjects(arr || []);
+    } catch (err) {
+      console.error(err);
+      flash('Could not load projects: ' + err.message, 'danger');
+    }
+  }
+
+  // user list caching + loader
+  let usersCache = null;
+  async function loadUsersList() {
+    if (Array.isArray(usersCache)) return usersCache;
+    const endpoints = ['/api/users','/api/auth/users','/api/users/list','/api/bugs/users'];
+    for (const url of endpoints) {
+      try {
+        const res = await fetch(url, { headers: { ...tokenHeader() } });
+        if (!res.ok) continue;
+        const body = await res.json();
+        // common shapes: array or { users: [...] }
+        if (Array.isArray(body)) { usersCache = body; return usersCache; }
+        if (body && Array.isArray(body.users)) { usersCache = body.users; return usersCache; }
+      } catch (e) {
+        // try next endpoint
+      }
+    }
+    usersCache = [];
+    return usersCache;
+  }
+
+  function populateUsersSelect(list) {
+    const sel = document.getElementById('proj_assign');
+    if (!sel) return;
+    const opts = ['<option value="">Unassigned</option>'];
+    for (const u of list) {
+      const id = u.id ?? u.user_id ?? u._id;
+      const label = u.name || u.email || u.username || (`User ${id}`);
+      if (id != null) opts.push(`<option value="${escapeHtml(String(id))}">${escapeHtml(label)}</option>`);
+    }
+    sel.innerHTML = opts.join('');
+  }
+
+  // populate users when modal opens (bootstrap modal event)
+  try {
+    projectModalEl.addEventListener('show.bs.modal', async function () {
+      const users = await loadUsersList();
+      populateUsersSelect(users);
+    });
+  } catch(e) {
+    // if Bootstrap event binding isn't available fallback to loading once on init
+  }
+
+  function renderProjects(list) {
+    if (!Array.isArray(list) || list.length === 0) {
+      projectsList.innerHTML = '<div class="text-muted">No projects yet</div>';
+      return;
+    }
+    projectsList.innerHTML = list.map(p => {
+      const name = p.name || p.title || 'Project';
+      const desc = p.description ? `<p class="mb-0 small text-muted">${escapeHtml(p.description)}</p>` : '';
+      const assigneeName = p.assignee_name || (p.assignee && (p.assignee.name || p.assignee.email)) || (p.assigned_to && (p.assigned_to.name || p.assigned_to.email)) || '';
+      const assigneeHtml = assigneeName ? `<div class="small text-muted mt-2">Assigned: ${escapeHtml(assigneeName)}</div>` : '';
+      return `<div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h5 class="mb-1">${escapeHtml(name)}</h5>
+          ${desc}
+          ${assigneeHtml}
+          <div class="mt-3">
+            <a class="btn btn-sm btn-primary" href="/projects/${p.id}">Open</a>
+            <button class="btn btn-sm btn-outline-secondary ms-1" onclick="editQuick(${p.id})">Edit</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // simple escape
+  function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+  // create project
+  projectForm.addEventListener('submit', async function(e){
+    e.preventDefault();
+    const title = document.getElementById('proj_title').value.trim();
+    const desc = document.getElementById('proj_desc').value.trim();
+    const assignee = document.getElementById('proj_assign') ? document.getElementById('proj_assign').value || null : null;
+    const start = document.getElementById('proj_start').value || null;
+    const deadline = document.getElementById('proj_deadline').value || null;
+    if (!title) return flash('Title required','warning');
+    const payload = { title, description: desc };
+    if (assignee) payload.assignee_id = assignee;
+    if (start) payload.start_date = start;
+    if (deadline) payload.deadline = deadline;
+    try {
+      const res = await fetch('/api/bugs/projects', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', ...tokenHeader() },
+        body: JSON.stringify(payload)
+      });
+      if (res.status === 401) {
+        const err = await parseErrorBody(res);
+        return handleAuthFail(err.msg || 'Unauthorized');
+      }
+      if (!res.ok) {
+        const body = await parseErrorBody(res);
+        throw new Error(body.msg || 'Failed to create project');
+      }
+      const data = await res.json();
+      flash('Project created', 'success');
+      // hide modal (bootstrap)
+      try { bootstrap.Modal.getInstance(projectModalEl).hide(); } catch(e){}
+      projectForm.reset();
+      await loadProjects();
+    } catch (err) {
+      console.error(err);
+      flash(err.message, 'danger');
+    }
+  });
+
+  // quick edit: open project detail page for editing or reuse modal to load project info
+  window.editQuick = function(id) {
+    window.location.href = `/projects/${id}`;
+  };
+
+  // Logout behavior
+  document.getElementById('logoutBtn').addEventListener('click', function(){
+    localStorage.removeItem('token');
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('tv_token');
+    // also clear cookie token if present
+    document.cookie = 'token=;max-age=0;path=/';
+    document.cookie = 'tv_token=;max-age=0;path=/';
+    safeRedirect('/login');
+  });
+
+  // initialize
+  (function init(){
+    const t = getToken();
+    if (!t) {
+      // If we are on the login page already, do not force a redirect — allow user to log in.
+      if (window.location.pathname === '/login') return;
+      return handleAuthFail('Please login first');
+    }
+    loadProjects();
+  })();
+
+  // try to warm-load users once so Assign dropdown is ready quickly
+  (async function warmLoad() {
+    await loadUsersList();
+  })();
+  </script>
+    <script src="/static/js/site_socket.js"></script>
+</body>
+</html>

@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dashboard - TrackVerse</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Bootstrap & Icons -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      body {
+        background: linear-gradient(135deg, #1a1f2b, #2c3e50);
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      /* Navbar */
+      .navbar {
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .navbar-brand {
+        font-weight: 600;
+        color: #fff !important;
+        letter-spacing: 1px;
+      }
+
+      .navbar .btn {
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        transition: 0.3s ease;
+      }
+
+      .navbar .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+      }
+
+      /* Dashboard Heading */
+      .dashboard-header {
+        text-align: center;
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .dashboard-header h3 {
+        font-weight: 600;
+        font-size: 2.2rem;
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      /* Stat Cards */
+      .card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border: none;
+        border-radius: 20px;
+        color: #fff;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+      }
+
+      /* simple stat cards (original look) */
+
+
+      .card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .card h5 {
+        font-weight: 600;
+      }
+
+      .btn-gradient {
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        color: #fff;
+        border: none;
+        border-radius: 30px;
+        padding: 8px 18px;
+        font-weight: 500;
+        transition: 0.3s ease;
+      }
+
+      .btn-gradient:hover {
+        transform: scale(1.05);
+        background: linear-gradient(45deg, #0072ff, #00c6ff);
+      }
+
+      /* Realtime Card */
+      #realtimeStatus {
+        color: #ccc;
+      }
+
+      /* Glassmorphism modal styles for dark theme */
+      .glass-modal {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6);
+        backdrop-filter: blur(8px) saturate(120%);
+        border-radius: 12px;
+      }
+
+      .glass-input {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        color: #fff !important;
+      }
+
+      .glass-input::placeholder {
+        color: rgba(255,255,255,0.6);
+      }
+
+      /* small helper to give modal buttons a subtle glass look */
+      .glass-modal .btn-primary {
+        background: linear-gradient(45deg, rgba(0,118,255,0.9), rgba(0,198,255,0.9));
+        border: none;
+        box-shadow: 0 6px 18px rgba(0,118,255,0.12);
+      }
+
+      .alert {
+        border-radius: 10px;
+      }
+
+      /* Responsive Tweaks */
+      @media (max-width: 768px) {
+        .dashboard-header h3 {
+          font-size: 1.7rem;
+        }
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <!-- Navbar -->
+   <!-- Navbar -->
+<nav class="navbar navbar-expand-lg fixed-top">
+  <div class="container-fluid px-4">
+    <!-- Brand (logo + text) -->
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <img
+        src="/static/images/TV.svg"
+        alt="TrackVerse Logo"
+        height="38"
+        class="logo-glow"
+      />
+      <span>TrackVerse</span>
+    </a>
+
+    <!-- Toggle button for mobile -->
+    <button
+      class="navbar-toggler text-white border-0"
+      type="button"
+      data-bs-toggle="collapse"
+      data-bs-target="#navbarMenu"
+    >
+      <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <!-- Navbar Links -->
+    <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
+      <div class="d-flex align-items-center gap-2 mt-3 mt-lg-0">
+        <a class="btn btn-sm" href="/teams">
+          <i class="fa-solid fa-users me-1"></i> Teams
+        </a>
+        <a class="btn btn-sm" href="/projects">
+          <i class="fa-solid fa-folder-open me-1"></i> Projects
+        </a>
+        <a class="btn btn-sm" href="/bugs">
+          <i class="fa-solid fa-bug me-1"></i> Bugs
+        </a>
+        <!-- Assigned Icon with Badge -->
+            <a class="btn btn-sm position-relative" href="/bugs">
+              <i class="fa-solid fa-user-check"></i>
+              <span
+                id="assignedBadge"
+                class="badge bg-danger position-absolute top-0 start-100 translate-middle px-1 py-0 d-none"
+                title="Assigned to you"
+                >0</span>
+            </a>
+        <button id="logoutBtn" class="btn btn-sm">
+          <i class="fa-solid fa-right-from-bracket me-1"></i> Logout
+        </button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+    <div class="container py-5 mt-5">
+      <!-- Header -->
+      <div class="dashboard-header">
+        <h3>Welcome to TrackVerse</h3>
+        <p class="text-secondary">
+          Catch ’em. Kill ’em. Clean the code
+        </p>
+      </div>
+
+      <!-- Flash Messages -->
+      <div id="flash" class="mb-3"></div>
+
+      <!-- Stats Row -->
+      <div class="d-flex justify-content-end mb-3">
+        <button id="refreshCards" class="btn-gradient btn-sm"><i class="fa-solid fa-rotate-right me-1"></i> Refresh</button>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-4">
+          <div class="card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5><i class="fa-solid fa-folder-open me-2 text-info"></i> Projects</h5>
+                <p id="projectsCount" class="h2 my-2">—</p>
+                <p class="small text-light opacity-75">Create, edit and view projects.</p>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <a href="/projects" class="btn btn-sm btn-outline-light">Manage</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5><i class="fa-solid fa-bug me-2 text-danger"></i>Bugs</h5>
+                <p id="bugsCount" class="h2 my-2">—</p>
+                <p class="small text-light opacity-75">
+                  Report, update and track bugs.
+                </p>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <a href="/bugs" class="btn btn-sm btn-outline-light">Manage</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <h5><i class="fa-solid fa-users me-2 text-warning"></i>Teams</h5>
+                <p id="teamsCount" class="h2 my-2">—</p>
+                <p class="small text-light opacity-75">Create and manage your teams.</p>
+              </div>
+              <div class="d-flex flex-column gap-2">
+                <button id="openTeamModal" class="btn btn-sm btn-outline-light">New Team</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Realtime Section -->
+      <div class="mt-4">
+        <div class="card p-4">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <strong
+                ><i class="fa-solid fa-wifi me-1 text-success"></i
+                >Realtime</strong
+              >
+              <div id="realtimeStatus" class="small text-muted mt-1">
+                Disconnected
+              </div>
+            </div>
+            <div>
+              <button
+                id="connectSocket"
+                type="button"
+                class="btn btn-sm btn-outline-success rounded-pill me-2 color-Green"
+              >
+                Connect
+              </button>
+              <button
+                id="disconnectSocket"
+                type="button"
+                class="btn btn-sm btn-outline-danger rounded-pill"
+              >
+                Disconnect
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Assigned to Me Section -->
+<div class="mt-4">
+  <div class="card p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-semibold mb-0">
+        <i class="fa-solid fa-user-check text-warning me-2"></i> Assigned to Me
+      </h5>
+      <button id="refreshAssigned" class="btn btn-sm btn-outline-light rounded-pill">
+        <i class="fa-solid fa-rotate-right me-1"></i> Refresh
+      </button>
+    </div>
+
+    <!-- Assigned List -->
+    <div id="assignedList" class="assigned-list">
+      <div class="text-center text-light opacity-75 py-3">Loading...</div>
+    </div>
+
+    <!-- Debug Info (optional hidden) -->
+    <div id="assignedDebug"
+         class="mt-2 small text-warning"
+         style="white-space:pre-wrap;font-family:monospace;display:none">
+    </div>
+  </div>
+</div>
+    </div>
+
+
+    <!-- JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+
+    <script>
+      // Token helpers
+      function getToken() {
+        const keys = ["tv_token", "token", "access_token", "jwt", "authToken"];
+        for (const k of keys) {
+          const v = localStorage.getItem(k);
+          if (v) return v;
+        }
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("token")) return params.get("token");
+          if (params.get("tv_token")) return params.get("tv_token");
+        } catch (e) {}
+        if (window.location.pathname !== "/login") {
+          try {
+            const match = document.cookie.match(
+              /(?:^|;\\s*)(?:tv_token|token|access_token|jwt|authToken)=([^;]+)/
+            );
+            if (match) return decodeURIComponent(match[1]);
+          } catch (e) {}
+        }
+        return "";
+      }
+
+      function tokenHeader() {
+        const t = getToken();
+        return t ? { Authorization: "Bearer " + t } : {};
+      }
+
+      function safeRedirect(url) {
+        window.location.href = url;
+      }
+
+      function flash(msg, kind = "info", timeout = 3000) {
+        const el = document.getElementById("flash");
+        el.innerHTML = `<div class="alert alert-${kind}">${msg}</div>`;
+        if (timeout) setTimeout(() => (el.innerHTML = ""), timeout);
+      }
+
+      async function safeFetch(url, opts = {}) {
+        const res = await fetch(url, opts);
+        if (res.status === 401) {
+          flash("Unauthorized", "warning");
+          localStorage.clear();
+          safeRedirect("/login");
+          return { ok: false };
+        }
+        const ct = (res.headers.get("content-type") || "").toLowerCase();
+        let body = null;
+        try {
+          body = ct.includes("application/json")
+            ? await res.json()
+            : await res.text();
+        } catch (e) {
+          body = null;
+        }
+        return { ok: res.ok, body };
+      }
+
+      const projectsCountEl = document.getElementById("projectsCount");
+      const bugsCountEl = document.getElementById("bugsCount");
+      const realtimeStatusEl = document.getElementById("realtimeStatus");
+
+      async function updateProjects() {
+        projectsCountEl.textContent = "Loading...";
+        const r = await safeFetch("/api/bugs/projects", {
+          headers: { ...tokenHeader() },
+        });
+        if (!r.ok) return (projectsCountEl.textContent = "—");
+        const body = r.body;
+        projectsCountEl.textContent = Array.isArray(body)
+          ? body.length
+          : body?.count ?? body?.total ?? "—";
+      }
+
+      async function updateBugs() {
+        bugsCountEl.textContent = "Loading...";
+        const r = await safeFetch("/api/bugs", {
+          headers: { ...tokenHeader() },
+        });
+        if (!r.ok) return (bugsCountEl.textContent = "—");
+        const body = r.body;
+        bugsCountEl.textContent = Array.isArray(body)
+          ? body.length
+          : body?.count ?? body?.total ?? "—";
+      }
+
+      const refreshCardsBtn = document.getElementById("refreshCards");
+      if (refreshCardsBtn) {
+        refreshCardsBtn.addEventListener("click", () => {
+          updateProjects();
+          updateBugs();
+          if (typeof updateTeams === 'function') updateTeams();
+        });
+      }
+
+      let socket = null;
+      function connectSocket() {
+        const token = getToken();
+        if (!token) return flash("No token found", "warning");
+  // allow socket.io to choose transport (polling or websocket) based on server capabilities
+  socket = io("/", { auth: { token } });
+        realtimeStatusEl.textContent = "Connecting...";
+        socket.on("connect", () => {
+          realtimeStatusEl.textContent = "Connected";
+          flash("Realtime connected", "success");
+        });
+        socket.on(
+          "disconnect",
+          () => (realtimeStatusEl.textContent = "Disconnected")
+        );
+        socket.on("update", (msg) => {
+          flash("Realtime update received", "info", 2500);
+          updateProjects();
+          updateBugs();
+        });
+      }
+
+      function disconnectSocket() {
+        if (socket) socket.disconnect();
+        realtimeStatusEl.textContent = "Disconnected";
+      }
+
+      document
+        .getElementById("connectSocket")
+        .addEventListener("click", connectSocket);
+      document
+        .getElementById("disconnectSocket")
+        .addEventListener("click", disconnectSocket);
+
+      document.getElementById("logoutBtn").addEventListener("click", () => {
+        localStorage.clear();
+        safeRedirect("/login");
+      });
+
+      (function init() {
+        const t = getToken();
+        if (!t) return safeRedirect("/login");
+        updateProjects();
+        updateBugs();
+        // update teams count
+        if (typeof updateTeams === 'function') updateTeams();
+        setTimeout(connectSocket, 500);
+      })();
+    </script>
+        <script src="/static/js/site_socket.js"></script>
+        <script src="/static/js/teams.js"></script>
+        <!-- Team creation modal -->
+        <div class="modal fade" id="teamModal" tabindex="-1" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content glass-modal p-3 bg-dark" >
+              <div class="modal-header border-0">
+                <h5 class="modal-title">Create Team</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="teamForm">
+                  <div class="mb-3">
+                    <label class="form-label text-light">Team Name</label>
+                    <input id="team_name" name="name" class="form-control glass-input text-black" required />
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label text-light">Description</label>
+                    <textarea id="team_desc" name="description" class="form-control glass-input text-black" rows="3"></textarea>
+                  </div>
+                  <div class="mb-3">
+                    <label class="form-label text-light">Invite Code (optional)</label>
+                    <input id="team_invite" name="invite_code" class="form-control glass-input text-black" />
+                  </div>
+                  <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary px-4">Create</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+  </body>
+</html>

@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Bug Detail - TrackVerse</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+
+    <style>
+      *
+{
+  background-color: transparent !important;
+}
+    body {
+  background: linear-gradient(135deg, #0d1117, #1a1f2b);
+  color: #eaeaea;
+  font-family: "Poppins", sans-serif;
+  min-height: 100vh;
+  background-attachment: fixed;
+}
+
+.navbar {
+  background: rgba(20, 25, 35, 0.95) !important;
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(0, 198, 255, 0.2);
+}
+
+.navbar-brand {
+  color: #00c6ff !important;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.container {
+  background: rgba(20, 25, 35, 0.95) !important;
+  border-radius: 16px;
+  box-shadow: 0 0 20px rgba(0, 198, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #eaeaea !important;
+}
+
+/* Force all text in container to be light color */
+.container,
+.container *:not(.btn):not(.navbar-brand):not(.timestamp):not(.time):not(.comment-time) {
+  color: #eaeaea !important;
+}
+
+h6 {
+  color: #00c6ff !important;
+  margin-bottom: 1rem;
+}
+
+hr {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+}
+
+textarea.form-control {
+  background: rgba(255, 255, 255, 0.05) !important;
+  color: #fff !important;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+textarea.form-control:focus {
+  box-shadow: 0 0 8px rgba(0, 198, 255, 0.5);
+  border-color: #00c6ff;
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #fff !important;
+}
+
+textarea.form-control::placeholder {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(45deg, #007bff, #00c6ff);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0, 198, 255, 0.3);
+  transition: 0.3s;
+  color: #fff;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 0 20px rgba(0, 198, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.btn-outline-secondary {
+  color: #eaeaea !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+.btn-outline-secondary:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #00c6ff !important;
+  border-color: #00c6ff !important;
+}
+
+#commentsList {
+  background: rgba(20, 25, 35, 0.95) !important;
+  color: #eaeaea !important;
+  padding: 1rem;
+  border-radius: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+  box-shadow: inset 0 0 10px rgba(0, 198, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#commentsList::-webkit-scrollbar {
+  width: 6px;
+}
+
+#commentsList::-webkit-scrollbar-thumb {
+  background: rgba(0, 198, 255, 0.4);
+  border-radius: 4px;
+}
+
+#bugContainer {
+  background: rgba(20, 25, 35, 0.95) !important;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  border: 1px solid rgba(120, 123, 249, 0.1);
+  box-shadow: 0 0 10px rgba(0, 198, 255, 0.05);
+  color: #eaeaea !important;
+}
+
+#flash {
+  color: #00c6ff !important;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* Time text styling - make sure these stay blue */
+.timestamp,
+.time,
+.comment-time {
+  color: rgba(0, 198, 255, 0.8) !important;
+  font-size: 0.9rem;
+}
+
+/* Fix for any Bootstrap text classes that might be causing issues */
+.text-dark,
+.text-black,
+.text-body {
+  color: #eaeaea !important;
+}
+
+.text-muted {
+  color: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Ensure all headings are properly colored */
+h1, h2, h3, h4, h5, h6 {
+  color: #eaeaea !important;
+}
+
+h1 .text-primary, h2 .text-primary, h3 .text-primary,
+h4 .text-primary, h5 .text-primary, h6 .text-primary {
+  color: #00c6ff !important;
+}
+
+/* Fix for any inline styles that might be causing white background */
+[style*="background-color: white"],
+[style*="background-color: #fff"],
+[style*="background-color:white"],
+[style*="background: white"],
+[style*="background: #fff"],
+[style*="background:white"] {
+  background: rgba(20, 25, 35, 0.95) !important;
+}
+
+[style*="color: black"],
+[style*="color: #000"],
+[style*="color:black"],
+[style*="color: white"],
+[style*="color: #fff"],
+[style*="color:white"] {
+  color: #eaeaea !important;
+}
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-light shadow-sm">
+      <div
+        class="container d-flex justify-content-between align-items-center py-2"
+      >
+        <a class="navbar-brand fs-4" href="/">TrackVerse</a>
+        <div>
+          <a class="btn btn-sm btn-outline-secondary me-2" href="/bugs">Back</a>
+          <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4 text-white">
+      <div id="flash"></div>
+      <div id="bugContainer" class="bg-transparent"></div>
+
+      <hr />
+      <h6>Comments</h6>
+      <div id="commentsList" class="mb-3"></div>
+      <form id="commentForm" class="mb-4">
+        <div class="mb-2">
+          <textarea
+            id="commentBody"
+            class="form-control"
+            placeholder="Add a comment"
+          ></textarea>
+        </div>
+        <button class="btn btn-primary">Post Comment</button>
+      </form>
+    </div>
+
+    <script id="tv-data" type="application/json">
+      {{ bug_id | tojson }}
+    </script>
+
+    <script>
+      (function () {
+        var el = document.getElementById("tv-data");
+        try {
+          window.TV_BUG_ID = el ? JSON.parse(el.textContent) : null;
+        } catch (e) {
+          window.TV_BUG_ID = null;
+        }
+      })();
+
+      function qParam(name) {
+        try {
+          return new URLSearchParams(window.location.search).get(name);
+        } catch (e) {
+          return null;
+        }
+      }
+
+      (function openEditIfRequested() {
+        const edit = qParam("edit");
+        if (!edit) return;
+        try {
+          const modalEl = document.getElementById("bugEditModal");
+          if (modalEl) {
+            if (typeof bootstrap !== "undefined" && bootstrap.Modal) {
+              const m = new bootstrap.Modal(modalEl);
+              m.show();
+              return;
+            } else {
+              modalEl.style.display = "block";
+            }
+          }
+        } catch (e) {}
+        const inline = document.getElementById("bugEditFormContainer");
+        if (inline) inline.style.display = "block";
+      })();
+
+      (function handleLegacyEditPath() {
+        const match = window.location.pathname.match(
+          /^\/bugs\/(\d+)\/edit\/?$/
+        );
+        if (match) {
+          const id = match[1];
+          const target = `/bugs/${id}?edit=1`;
+          if (window.location.href.indexOf("?edit=1") === -1) {
+            window.location.replace(target);
+          }
+        }
+      })();
+    </script>
+
+    <script
+      src="https://cdn.socket.io/4.6.1/socket.io.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/js/bug_detail.js"></script>
+    <script src="/static/js/site_socket.js"></script>
+  </body>
+</html>

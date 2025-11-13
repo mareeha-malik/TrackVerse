@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Projects - TrackVerse</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/css/styles.css" />
+    <style>
+      body {
+        background: linear-gradient(135deg, #1a1f2b, #2c3e50);
+        color: #fff;
+        font-family: "Poppins", sans-serif;
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+      /* Dashboard Stat Cards */
+      #dashboard .card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border: none;
+        border-radius: 20px;
+        color: #ffffff;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+      .card {
+        background: rgba(255, 255, 255, 0.08);
+        backdrop-filter: blur(20px);
+        border: none;
+        border-radius: 20px;
+        color: #ffffff;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+        transition: all 0.3s ease;
+        text-align: center;
+      }
+      #dashboard .card:hover {
+        transform: translateY(-5px);
+        background: rgba(255, 255, 255, 0.12);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      #dashboard .small {
+        font-weight: 500;
+        color: rgb(255, 255, 255);
+        letter-spacing: 0.5px;
+      }
+
+      #dashboard .h4 {
+        font-weight: 600;
+        font-size: 1.8rem;
+        margin-top: 5px;
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .navbar {
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .navbar {
+        backdrop-filter: blur(12px);
+        background: rgba(255, 255, 255, 0.08) !important;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .navbar-brand {
+        font-weight: 600;
+        color: #fff !important;
+        letter-spacing: 1px;
+      }
+
+      .navbar .btn {
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: #fff;
+        transition: 0.3s ease;
+      }
+
+      .navbar .btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.05);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-light bg-white shadow-sm">
+      <div class="container">
+        <a class="navbar-brand" href="/">TrackVerse</a>
+        <div>
+          <a class="btn btn-sm btn-outline-secondary" href="/dashboard"
+            >Dashboard</a
+          >
+          <button id="logoutBtn" class="btn btn-outline-secondary btn-sm">
+            Logout
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container py-4">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3>Projects</h3>
+        <!-- added explicit type to prevent accidental submits in some contexts -->
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#projectModal"
+        >
+          New Project
+        </button>
+      </div>
+
+      <!-- Search & Filters (new) -->
+      <form id="projectsFilterForm" class="row g-2 mb-3">
+        <div class="col-md-3">
+          <input
+            id="q_search"
+            class="form-control"
+            placeholder="Search title or description"
+          />
+        </div>
+        <div class="col-md-2">
+          <select id="q_status" class="form-select">
+            <option value="">Any status</option>
+            <option value="open">Open</option>
+            <option value="in_progress">In Progress</option>
+            <option value="resolved">Resolved</option>
+            <option value="closed">Closed</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <select id="q_priority" class="form-select">
+            <option value="">Any priority</option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <select id="q_assignee" class="form-select">
+            <option value="">Any assignee</option>
+            <!-- populated by JS -->
+          </select>
+        </div>
+        <div class="col-md-2 text-end">
+          <button
+            class="btn btn-outline-primary"
+            id="applyFiltersBtn"
+            type="button"
+          >
+            Apply
+          </button>
+        </div>
+      </form>
+
+      <!-- Dashboard: interactive summary -->
+      <div id="dashboard" class="row g-3 mb-3">
+        <div class="col-md-3">
+          <div class="card p-3">
+            <div class="small">Projects</div>
+            <div id="dash_projects" class="h4">—</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-3">
+            <div class="small">Open Bugs</div>
+            <div id="dash_open" class="h4">—</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-3">
+            <div class="small">Closed Bugs</div>
+            <div id="dash_closed" class="h4">—</div>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card p-3">
+            <div class="small">Unassigned</div>
+            <div id="dash_unassigned" class="h4">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="flash" class="mb-2"></div>
+
+      <div id="projectsList" class="row g-3"></div>
+    </div>
+    <!-- Project Modal -->
+    <div class="modal fade" id="projectModal" tabindex="-1">
+      <div class="modal-dialog">
+        <form id="projectForm" class="modal-content glass-modal">
+          <div class="modal-header border-0">
+            <h5 class="modal-title text-white">Create Project</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label text-light">Title</label>
+              <input
+                id="proj_title"
+                name="title"
+                class="form-control glass-input text-black"
+                placeholder="Enter project title"
+                required
+              />
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-light">Description</label>
+              <textarea
+                id="proj_desc"
+                name="description"
+                class="form-control glass-input text-black"
+                rows="3"
+                placeholder="Write a short description..."
+              ></textarea>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-light">Assign To</label>
+              <select
+                id="proj_assign"
+                name="assignee_id"
+                class="form-select glass-input text-black"
+              >
+                <option value="">Unassigned</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label text-light">Team (optional)</label>
+              <select id="proj_team" name="team_id" class="form-select glass-input text-black">
+                <option value="">Personal project</option>
+                <!-- populated by JS with teams the user belongs to -->
+              </select>
+            </div>
+
+            <div class="mb-3" id="proj_members_wrapper" style="display:none;">
+              <label class="form-label text-light">Assign Members (team)</label>
+              <select id="proj_members" name="member_ids" class="form-select glass-input text-black" multiple size="5">
+                <!-- populated by JS when a team is selected -->
+              </select>
+              <div class="form-text text-muted">Select one or more team members to add to this project.</div>
+            </div>
+
+            <div class="row">
+              <div class="col mb-3">
+                <label class="form-label text-light">Start Date</label>
+                <input
+                  id="proj_start"
+                  name="start_date"
+                  type="date"
+                  class="form-control glass-input text-black"
+                />
+              </div>
+              <div class="col mb-3">
+                <label class="form-label text-light">Deadline</label>
+                <input
+                  id="proj_deadline"
+                  name="deadline"
+                  type="date"
+                  class="form-control glass-input text-black"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-0">
+            <button type="submit" class="btn btn-primary px-4">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <style>
+      /* 🌙 Glass Modal Theme */
+      .glass-modal {
+        background: rgba(20, 20, 30, 0.7);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 0 25px rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+      }
+
+      .glass-input {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: #fff;
+      }
+
+      .glass-input::placeholder {
+        color: rgb(255, 255, 255);
+        opacity: 1;
+      }
+
+      .form-select.glass-input option {
+        background: #1e1e2e;
+        color: #fff;
+      }
+
+      .btn-primary {
+        background: linear-gradient(45deg, #0072ff, #00c6ff);
+        border: none;
+        border-radius: 8px;
+        transition: all 0.2s ease-in-out;
+      }
+
+      .btn-primary:hover {
+        background: linear-gradient(45deg, #00c6ff, #0072ff);
+        transform: translateY(-1px);
+      }
+
+      .modal-content {
+        color: #fff;
+      }
+    </style>
+
+    <!-- Project Details Modal (new) -->
+    <div class="modal fade" id="projectDetailsModal" tabindex="-1">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 id="pd_title" class="modal-title">Project</h5>
+            <button
+              type="button"
+              class="btn-close"
+              data-bs-dismiss="modal"
+            ></button>
+          </div>
+          <div class="modal-body">
+            <p id="pd_desc" class="text-muted small"></p>
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+              <div>
+                <span class="badge bg-secondary" id="pd_meta"></span>
+              </div>
+              <div>
+                <button
+                  id="refreshBugsBtn"
+                  class="btn btn-sm btn-outline-secondary"
+                >
+                  Refresh
+                </button>
+              </div>
+            </div>
+
+            <div id="bugsList" class="list-group">
+              <!-- bugs will be inserted here -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button
+              id="closePd"
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- include bootstrap JS (bundle includes Popper) so modals/data-bs-* work -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/static/js/site_socket.js"></script>
+
+    <!-- Defensive: force socket.io to polling and block direct WebSocket attempts to /socket.io
+       This prevents the dev Werkzeug server from getting raw websocket handshakes that trigger
+       "write() before start_response" when socket support isn't configured. -->
+    <script>
+      (function () {
+        // If socket.io client is present, wrap its connect to force polling transport.
+        function wrapSocketIo() {
+          try {
+            if (typeof io !== "undefined" && io && io.connect) {
+              const orig = io.connect.bind(io);
+              io.connect = function (url, opts) {
+                opts = opts || {};
+                if (!Array.isArray(opts.transports))
+                  opts.transports = ["polling"];
+                return orig(url, opts);
+              };
+            } else {
+              // If io isn't loaded yet, create a temporary setter to wrap it when added.
+              try {
+                const desc = Object.getOwnPropertyDescriptor(window, "io");
+                if (!desc || desc.configurable) {
+                  Object.defineProperty(window, "io", {
+                    configurable: true,
+                    enumerable: true,
+                    set(val) {
+                      try {
+                        if (val && val.connect) {
+                          const orig = val.connect.bind(val);
+                          val.connect = function (url, opts) {
+                            opts = opts || {};
+                            if (!Array.isArray(opts.transports))
+                              opts.transports = ["polling"];
+                            return orig(url, opts);
+                          };
+                        }
+                      } catch (e) {}
+                      // define actual property
+                      Object.defineProperty(window, "io", {
+                        value: val,
+                        writable: true,
+                        configurable: true,
+                      });
+                    },
+                    get() {
+                      return undefined;
+                    },
+                  });
+                }
+              } catch (e) {}
+            }
+          } catch (e) {}
+        }
+        wrapSocketIo();
+
+        // Block direct WebSocket constructors to /socket.io to avoid raw ws attempts.
+        try {
+          const OriginalWS = window.WebSocket;
+          if (OriginalWS) {
+            const ProxyWS = function (url, protocols) {
+              try {
+                if (
+                  typeof url === "string" &&
+                  url.indexOf("/socket.io/") !== -1
+                ) {
+                  console.warn(
+                    "Blocked direct WebSocket to",
+                    url,
+                    "- forcing polling transport instead."
+                  );
+                  // return a minimal fake socket to avoid exceptions in client code.
+                  const fake = {
+                    send() {},
+                    close() {
+                      if (typeof fake.onclose === "function")
+                        fake.onclose({
+                          code: 1000,
+                          reason: "Blocked by client",
+                        });
+                    },
+                    addEventListener() {},
+                    removeEventListener() {},
+                    // allow setting handlers
+                    set onopen(v) {
+                      fake._onopen = v;
+                    },
+                    get onopen() {
+                      return fake._onopen;
+                    },
+                    set onmessage(v) {
+                      fake._onmessage = v;
+                    },
+                    get onmessage() {
+                      return fake._onmessage;
+                    },
+                    set onclose(v) {
+                      fake._onclose = v;
+                    },
+                    get onclose() {
+                      return fake._onclose;
+                    },
+                  };
+                  // schedule a closed event so client logic sees a deterministic result
+                  setTimeout(() => {
+                    if (fake.onclose)
+                      fake.onclose({ code: 1006, reason: "Blocked by client" });
+                  }, 0);
+                  return fake;
+                }
+              } catch (e) {}
+              // otherwise create a real WebSocket
+              return new OriginalWS(url, protocols);
+            };
+            ProxyWS.prototype = OriginalWS.prototype;
+            window.WebSocket = ProxyWS;
+          }
+        } catch (e) {}
+
+        // Also expose a small diagnostic hook so any socket errors are visible
+        window.__socketGuard = {
+          enabled: true,
+          warn(msg) {
+            if (window.console && console.warn)
+              console.warn("[socket-guard] " + msg);
+          },
+        };
+      })();
+    </script>
+
+    <script>
+      // improved token helper: check multiple storage keys, query param and cookie
+      function getToken() {
+        // include "tv_token" (used by auth.js) plus common names
+        const keys = ["tv_token", "token", "access_token", "jwt", "authToken"];
+        for (const k of keys) {
+          const v = localStorage.getItem(k);
+          if (v) return v;
+        }
+        // check query param ?token=...
+        try {
+          const params = new URLSearchParams(window.location.search);
+          if (params.get("token")) return params.get("token");
+          if (params.get("tv_token")) return params.get("tv_token");
+        } catch (e) {}
+        // avoid reading cookies when on /login to prevent stale cookie -> redirect loops
+        if (window.location.pathname !== "/login") {
+          try {
+            const match = document.cookie.match(
+              /(?:^|;\s*)(?:tv_token|token|access_token|jwt|authToken)=([^;]+)/
+            );
+            if (match) return decodeURIComponent(match[1]);
+          } catch (e) {}
+        }
+        return "";
+      }
+
+      function tokenHeader() {
+        const t = getToken();
+        return t ? { Authorization: "Bearer " + t } : {};
+      }
+
+      // safeRedirect prevents fast ping-pong between two pages (detects direct and reciprocal redirects)
+      function safeRedirect(url) {
+        try {
+          const key = "__lastRedirect";
+          const now = Date.now();
+          const prev = JSON.parse(sessionStorage.getItem(key) || "null");
+          const THRESHOLD = 3000; // ms - increased tolerance to avoid flicker
+
+          if (prev && now - prev.at < THRESHOLD) {
+            // direct repeat: same from->to happening too soon
+            if (prev.from === window.location.pathname && prev.to === url) {
+              console.warn("Prevented redirect loop (repeat) to", url);
+              return;
+            }
+            // reciprocal: previous attempt was the reverse pair (A->B then B->A)
+            if (prev.from === url && prev.to === window.location.pathname) {
+              console.warn(
+                "Prevented reciprocal redirect loop between",
+                window.location.pathname,
+                "and",
+                url
+              );
+              return;
+            }
+          }
+
+          // record this redirect attempt and perform it
+          sessionStorage.setItem(
+            key,
+            JSON.stringify({ from: window.location.pathname, to: url, at: now })
+          );
+        } catch (e) {
+          // best-effort: if storage fails, proceed with redirect
+          console.warn("safeRedirect storage failure, proceeding", e);
+        }
+        window.location.href = url;
+      }
+
+      function handleAuthFail(msg) {
+        // show helpful message then redirect (use safeRedirect)
+        if (msg) flash(msg, "warning", 2500);
+        // clear local storage tokens; keep cookie-clearing conservative
+        localStorage.removeItem("token");
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("tv_token");
+        // If already on login page, don't redirect (prevents refreshing /login -> loop)
+        if (window.location.pathname === "/login") return;
+        safeRedirect("/login");
+      }
+      function flash(msg, kind = "info", timeout = 4000) {
+        const el = document.getElementById("flash");
+        el.innerHTML = `<div class="alert alert-${kind}">${msg}</div>`;
+        if (timeout)
+          setTimeout(() => {
+            el.innerHTML = "";
+          }, timeout);
+      }
+
+      // DOM refs
+      const projectsList = document.getElementById("projectsList");
+      const projectForm = document.getElementById("projectForm");
+      const projectModalEl = document.getElementById("projectModal");
+
+      // helper to parse error body safely
+      async function parseErrorBody(res) {
+        try {
+          return await res.json();
+        } catch (e) {
+          try {
+            return { msg: await res.text() };
+          } catch (e2) {
+            return { msg: "Unknown error" };
+          }
+        }
+      }
+
+      // simple escape (added to avoid ReferenceError in renderProjects)
+      function escapeHtml(s) {
+        if (s == null) return "";
+        return String(s).replace(
+          /[&<>"']/g,
+          (m) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[m])
+        );
+      }
+
+      // compute dashboard counts from cached projects + optionally fetch aggregated bug list
+      async function computeDashboardFromCaches() {
+        const dp = document.getElementById("dash_projects");
+        const doOpen = document.getElementById("dash_open");
+        const dc = document.getElementById("dash_closed");
+        const dun = document.getElementById("dash_unassigned");
+
+        const projects = window._projectsCache || [];
+        if (dp) dp.textContent = String(projects.length || 0);
+
+        // try to get bugs via aggregated endpoint first
+        let bugs = [];
+        try {
+          const res = await fetch("/api/bugs", {
+            headers: { ...tokenHeader() },
+          });
+          if (res.ok) {
+            const body = await res.json();
+            if (Array.isArray(body)) bugs = body;
+            if (body && Array.isArray(body.bugs)) bugs = body.bugs;
+          }
+        } catch (e) {
+          // ignore and fallback
+        }
+
+        // fallback: try per-project quick loads if no aggregated list and small project count
+        if (!bugs.length && projects.length > 0 && projects.length <= 6) {
+          for (const p of projects) {
+            try {
+              const res = await fetch(
+                `/api/bugs?project_id=${encodeURIComponent(p.id)}`,
+                { headers: { ...tokenHeader() } }
+              );
+              if (res.ok) {
+                const b = await res.json();
+                if (Array.isArray(b)) bugs = bugs.concat(b);
+                if (b && Array.isArray(b.bugs)) bugs = bugs.concat(b.bugs);
+              }
+            } catch (e) {
+              // continue
+            }
+          }
+        }
+
+        const openCount = bugs.filter(
+          (b) =>
+            !b.status ||
+            ["open", "in_progress", "reopened", "Open", "In Progress"].includes(
+              (b.status + "").toLowerCase()
+            )
+        ).length;
+        const closedCount = bugs.filter((b) =>
+          ["resolved", "closed", "wontfix", "Resolved", "Closed"].includes(
+            (b.status + "").toLowerCase()
+          )
+        ).length;
+        const unassignedCount = bugs.filter(
+          (b) =>
+            !(
+              b.assignee_id ||
+              b.assigned_to ||
+              (b.assignee && (b.assignee.id || b.assignee._id))
+            )
+        ).length;
+
+        if (doOpen) doOpen.textContent = String(openCount);
+        if (dc) dc.textContent = String(closedCount);
+        if (dun) dun.textContent = String(unassignedCount);
+      }
+
+      // load projects
+      async function loadProjects(params = {}) {
+        // build basic query for first endpoint
+        const base = "/api/bugs/projects";
+        const qs = new URLSearchParams();
+        for (const k of Object.keys(params)) {
+          if (params[k] != null && params[k] !== "") qs.set(k, params[k]);
+        }
+        const urlWithQs = qs.toString() ? base + "?" + qs.toString() : base;
+        const endpoints = [urlWithQs, "/api/bugs"]; // prefer bug/project endpoints your backend has
+        let lastErr = null;
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url, { headers: { ...tokenHeader() } });
+            if (res.status === 401) {
+              const err = await parseErrorBody(res);
+              return handleAuthFail(err.msg || "Unauthorized");
+            }
+            if (!res.ok) continue;
+            const arr = await res.json();
+            // renderProjects must exist; ensure it's defined below
+            renderProjects(
+              Array.isArray(arr) ? arr : arr.projects || arr.data || []
+            );
+            return;
+          } catch (err) {
+            lastErr = err;
+          }
+        }
+        console.error("Could not load projects from any endpoint", lastErr);
+        flash("Could not load projects", "danger");
+      }
+
+      // render projects (was missing — added back)
+      function renderProjects(list) {
+        window._projectsCache = Array.isArray(list) ? list : [];
+        if (!Array.isArray(list) || list.length === 0) {
+          projectsList.innerHTML =
+            '<div class="text-muted">No projects yet</div>';
+          computeDashboardFromCaches();
+          return;
+        }
+        projectsList.innerHTML = list
+          .map((p) => {
+            const id = p.id ?? p._id ?? p.project_id;
+            const name = p.name || p.title || "Project";
+            const desc = p.description
+              ? `<p class="mb-0 small">${escapeHtml(p.description)}</p>`
+              : "";
+            const assigneeName =
+              p.assignee_name ||
+              (p.assignee && (p.assignee.name || p.assignee.email)) ||
+              (p.assigned_to && (p.assigned_to.name || p.assigned_to.email)) ||
+              "";
+            const assigneeHtml = assigneeName
+              ? `<div class="small text-muted mt-2">Assigned: ${escapeHtml(
+                  assigneeName
+                )}</div>`
+              : "";
+            // use data-action/data-id attributes and event delegation instead of inline onclick
+            return `<div class="col-md-4">
+        <div class="card p-3 h-100">
+          <h5 class="mb-1">${escapeHtml(name)}</h5>
+          ${desc}
+          ${assigneeHtml}
+          <div class="mt-3">
+            <button class="btn btn-sm btn-primary" data-action="open" data-id="${escapeHtml(
+              String(id)
+            )}">Open</button>
+            <button class="btn btn-sm btn-outline-secondary ms-1 text-white" data-action="edit" data-id="${escapeHtml(
+              String(id)
+            )}">Edit</button>
+          </div>
+        </div>
+      </div>`;
+          })
+          .join("");
+        computeDashboardFromCaches();
+      }
+
+      // reduced, robust user loader (returns array of users with role)
+      let usersCache = null;
+      async function loadUsersList(force = false) {
+        if (Array.isArray(usersCache) && !force) return usersCache;
+        // Probe just the single users endpoint and the profile endpoint to reduce 404 noise.
+        const endpoints = ["/api/users", "/api/auth/profile"];
+        let found = [];
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url, { headers: { ...tokenHeader() } });
+            if (res.status === 404) continue;
+            if (!res.ok) continue;
+            const body = await res.json();
+            if (Array.isArray(body)) found = body;
+            else if (body && Array.isArray(body.users)) found = body.users;
+            else if (body && body.user && body.user.id) {
+              // /api/auth/profile returns { user: {...} } or user object
+              found = [body.user || body];
+            }
+            if (found.length) break;
+          } catch (e) {
+            /* try next */
+          }
+        }
+        usersCache = (found || []).map((u) => ({
+          id: u.id ?? u.user_id ?? u._id,
+          name: u.name || u.email || u.username,
+          role:
+            u.role ??
+            u.type ??
+            (Array.isArray(u.roles) ? u.roles[0] : undefined),
+        }));
+        return usersCache;
+      }
+
+      // ensure users loaded helper (used by warmLoad and modal show)
+      async function ensureUsersLoaded() {
+        try {
+          const users = await loadUsersList();
+          if (Array.isArray(users) && users.length) return users;
+          const forced = await loadUsersList(true);
+          if (Array.isArray(forced) && forced.length) return forced;
+          flash(
+            "No users available to assign. Register users with roles first.",
+            "warning",
+            6000
+          );
+          return [];
+        } catch (e) {
+          console.warn("ensureUsersLoaded failed", e);
+          return [];
+        }
+      }
+
+      // populate assignee filter select
+      async function populateAssigneeFilter() {
+        const sel = document.getElementById("q_assignee");
+        if (!sel) return;
+        const users = await loadUsersList();
+        const opts = ['<option value="">Any assignee</option>'];
+        if (!users || users.length === 0)
+          opts.push('<option value="" disabled>No users</option>');
+        else
+          for (const u of users)
+            opts.push(
+              `<option value="${escapeHtml(String(u.id))}">${escapeHtml(
+                (u.name || "User") + (u.role ? " (" + u.role + ")" : "")
+              )}</option>`
+            );
+        sel.innerHTML = opts.join("");
+      }
+
+      // ensure users loaded when modal opens and for filters
+      try {
+        projectModalEl.addEventListener("show.bs.modal", async function () {
+          const users = await loadUsersList();
+          populateUsersSelect(users);
+          // load teams the current user belongs to and populate the Team select
+          try {
+            const teams = await loadTeamsList();
+            populateTeamsSelect(teams);
+          } catch (e) {
+            console.warn("Failed to load teams for project modal", e);
+          }
+        });
+      } catch (e) {}
+
+      // Load teams helper (robust to different JSON shapes)
+      async function loadTeamsList(force = false) {
+        // cache on window to reduce repeated calls
+        if (window._teamsCache && !force) return window._teamsCache;
+        const endpoints = ["/api/teams", "/api/teams/list"];
+        let found = [];
+        for (const url of endpoints) {
+          try {
+            const res = await fetch(url, { headers: { ...tokenHeader() } });
+            if (!res.ok) continue;
+            const body = await res.json();
+            if (Array.isArray(body)) found = body;
+            else if (body && Array.isArray(body.teams)) found = body.teams;
+            else if (body && Array.isArray(body.data)) found = body.data;
+            if (found.length) break;
+          } catch (e) {
+            /* try next */
+          }
+        }
+        window._teamsCache = (found || []).map((t) => ({
+          id: t.id ?? t._id,
+          name: t.name || t.title || t.team_name || t.display_name,
+        }));
+        return window._teamsCache;
+      }
+
+      function populateTeamsSelect(teams) {
+        try {
+          const sel = document.getElementById("proj_team");
+          if (!sel) return;
+          const list = Array.isArray(teams) ? teams : window._teamsCache || [];
+          const opts = ['<option value="">Personal project</option>'];
+          if (!list || list.length === 0) opts.push('<option value="" disabled>No teams</option>');
+          else
+            for (const t of list)
+              opts.push(
+                `<option value="${escapeHtml(String(t.id))}">${escapeHtml(
+                  t.name || "Team"
+                )}</option>`
+              );
+          sel.innerHTML = opts.join("");
+        } catch (e) {
+          console.warn("populateTeamsSelect failed", e);
+        }
+      }
+
+      // listen for team selection changes to load team members into the members/assignee controls
+      try {
+        const teamSel = document.getElementById("proj_team");
+        if (teamSel) {
+          teamSel.addEventListener("change", async function () {
+            const vid = this.value;
+            const membersWrapper = document.getElementById("proj_members_wrapper");
+            const membersSel = document.getElementById("proj_members");
+            const assignSel = document.getElementById("proj_assign");
+            // reset member selects
+            if (membersSel) membersSel.innerHTML = "";
+            // if no team selected, hide members and reset assignee to users cache (current user fallback)
+            if (!vid) {
+              if (membersWrapper) membersWrapper.style.display = "none";
+              const users = await ensureUsersLoaded();
+              populateUsersSelect(users);
+              return;
+            }
+            // show wrapper
+            if (membersWrapper) membersWrapper.style.display = "block";
+            // fetch team members
+            let mems = [];
+            try {
+              const res = await fetch(`/api/teams/${encodeURIComponent(vid)}/members`, { headers: { ...tokenHeader() } });
+              if (res.ok) {
+                const body = await res.json();
+                if (Array.isArray(body)) mems = body;
+                else if (body && Array.isArray(body.members)) mems = body.members;
+                else if (body && Array.isArray(body.data)) mems = body.data;
+              }
+            } catch (e) {
+              console.warn("Failed to fetch team members", e);
+            }
+            // normalize members into {id,name}
+            const norm = (mems || []).map((m) => ({ id: m.id ?? m.user_id ?? m.user?.id, name: m.name || m.user?.name || m.email || m.user?.email }));
+            // populate members multi-select
+            try {
+              if (membersSel) {
+                const opts = [];
+                for (const u of norm) opts.push(`<option value="${escapeHtml(String(u.id))}">${escapeHtml(u.name || 'Member')}</option>`);
+                membersSel.innerHTML = opts.join("");
+              }
+            } catch (e) {
+              console.warn("populate project members failed", e);
+            }
+            // populate assign select with same list (prepend Unassigned)
+            try {
+              if (assignSel) {
+                const opts = ['<option value="">Unassigned</option>'];
+                for (const u of norm) opts.push(`<option value="${escapeHtml(String(u.id))}">${escapeHtml(u.name || 'Member')}</option>`);
+                assignSel.innerHTML = opts.join("");
+              }
+            } catch (e) {
+              console.warn("populate assign select failed", e);
+            }
+          });
+        }
+      } catch (e) {}
+
+      // populate assign dropdown inside the project modal
+      function populateUsersSelect(users) {
+        try {
+          const sel = document.getElementById("proj_assign");
+          if (!sel) return;
+          const list = Array.isArray(users) ? users : window.usersCache || [];
+          const opts = ['<option value="">Unassigned</option>'];
+          if (!list || list.length === 0)
+            opts.push('<option value="" disabled>No users</option>');
+          else
+            for (const u of list)
+              opts.push(
+                `<option value="${escapeHtml(String(u.id))}">${escapeHtml(
+                  (u.name || "User") + (u.role ? " (" + u.role + ")" : "")
+                )}</option>`
+              );
+          sel.innerHTML = opts.join("");
+        } catch (e) {
+          console.warn("populateUsersSelect failed", e);
+        }
+      }
+
+      // define openProject to open the project detail page (used by "Open" and "Edit" buttons)
+      window.openProject = function (id) {
+        if (!id) return;
+        // go to the project detail page which contains the edit UI
+        window.location.href = "/projects/" + encodeURIComponent(String(id));
+      };
+
+      // define editQuick so "Edit" button won't crash (reuses openProject)
+      window.editQuick = function (id) {
+        try {
+          window.openProject(id);
+        } catch (e) {
+          console.error("editQuick failed", e);
+        }
+      };
+
+      // delegated click handler for project buttons (robust: avoids relying on globals in inline handlers)
+      try {
+        projectsList.addEventListener("click", async function (evt) {
+          const btn = evt.target.closest("button[data-action]");
+          if (!btn) return;
+          const action = btn.getAttribute("data-action");
+          const id = btn.getAttribute("data-id");
+          if (!action || !id) return;
+          if (action === "open") {
+            try {
+              window.openProject(id);
+            } catch (e) {
+              window.location.href =
+                "/projects/" + encodeURIComponent(String(id));
+            }
+          } else if (action === "edit") {
+            // open the project modal in edit mode and populate fields
+            try {
+              // fetch project detail from backend (bug-backed endpoint)
+              const res = await fetch(
+                `/api/bugs/projects/${encodeURIComponent(id)}`,
+                { headers: { ...tokenHeader() } }
+              );
+              if (!res.ok) {
+                const body = await parseErrorBody(res).catch(() => ({
+                  msg: "Failed to fetch project",
+                }));
+                return flash(body.msg || "Failed to load project", "danger");
+              }
+              const p = await res.json();
+              // populate modal fields
+              document.getElementById("proj_title").value =
+                p.name || p.title || "";
+              document.getElementById("proj_desc").value = p.description || "";
+              // set assign dropdown (ensure users are loaded)
+              const users = await ensureUsersLoaded();
+              populateUsersSelect(users);
+              if (p.owner_id || p.assignee_id || p.assignee) {
+                const aid =
+                  p.owner_id ||
+                  p.assignee_id ||
+                  (p.assignee && (p.assignee.id || p.assignee._id));
+                try {
+                  document.getElementById("proj_assign").value = String(aid);
+                } catch (e) {}
+              } else {
+                document.getElementById("proj_assign").value = "";
+              }
+              // store editing id on the form element
+              projectForm.dataset.editing = String(id);
+              // show modal
+              const modal = new bootstrap.Modal(projectModalEl);
+              modal.show();
+            } catch (e) {
+              console.error("Edit open failed", e);
+              // fallback: navigate to project page
+              try {
+                window.openProject(id);
+              } catch (_) {
+                window.location.href =
+                  "/projects/" + encodeURIComponent(String(id));
+              }
+            }
+          }
+        });
+      } catch (e) {}
+
+      // wire filters UI
+      try {
+        document
+          .getElementById("applyFiltersBtn")
+          .addEventListener("click", function () {
+            const q = document.getElementById("q_search").value.trim();
+            const status = document.getElementById("q_status").value;
+            const priority = document.getElementById("q_priority").value;
+            const assignee = document.getElementById("q_assignee").value;
+            const params = {};
+            if (q) params.q = q;
+            if (status) params.status = status;
+            if (priority) params.priority = priority;
+            if (assignee) params.assignee_id = assignee;
+            loadProjects(params);
+          });
+      } catch (e) {}
+
+      // project form submit: create or update
+      try {
+        projectForm.addEventListener("submit", async function (ev) {
+          ev.preventDefault();
+          const title = document.getElementById("proj_title").value.trim();
+          const desc = document.getElementById("proj_desc").value.trim();
+          const assignee = document.getElementById("proj_assign").value || null;
+          if (!title) return flash("Title required", "warning");
+          const payload = { title, description: desc };
+          // include selected team (so backend will attach project.team_id)
+          try {
+            const teamVal = document.getElementById("proj_team")?.value || null;
+            if (teamVal) payload.team_id = Number(teamVal);
+          } catch (e) {}
+          // include selected project members (multi-select)
+          try {
+            const membersSel = document.getElementById("proj_members");
+            if (membersSel) {
+              const selected = Array.from(membersSel.selectedOptions || []).map(
+                (o) => Number(o.value)
+              );
+              if (selected.length) payload.member_ids = selected;
+            }
+          } catch (e) {}
+          // legacy: do NOT change project owner on create — keep current user as owner.
+          // If an assignee was selected in the modal, add them to initial project members
+          // so they are part of the project but ownership remains with the creator.
+          if (assignee) {
+            payload.member_ids = payload.member_ids || [];
+            // avoid duplicates
+            if (!payload.member_ids.includes(Number(assignee))) {
+              payload.member_ids.push(Number(assignee));
+            }
+          }
+          const editing = projectForm.dataset.editing;
+          try {
+            let res;
+            if (editing) {
+              res = await fetch(
+                `/api/bugs/projects/${encodeURIComponent(editing)}`,
+                {
+                  method: "PUT",
+                  headers: {
+                    "Content-Type": "application/json",
+                    ...tokenHeader(),
+                  },
+                  body: JSON.stringify(payload),
+                }
+              );
+            } else {
+              res = await fetch("/api/bugs/projects", {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  ...tokenHeader(),
+                },
+                body: JSON.stringify(payload),
+              });
+            }
+            if (!res.ok) {
+              const err = await parseErrorBody(res).catch(() => ({
+                msg: "Unknown error",
+              }));
+              return flash(err.msg || "Save failed", "danger");
+            }
+            // success: hide modal, reset form, refresh list
+            try {
+              bootstrap.Modal.getInstance(projectModalEl).hide();
+            } catch (e) {}
+            projectForm.reset();
+            delete projectForm.dataset.editing;
+            flash(
+              editing ? "Project updated" : "Project created",
+              "success",
+              2500
+            );
+            await loadProjects();
+          } catch (e) {
+            console.error("Project save failed", e);
+            flash("Save failed", "danger");
+          }
+        });
+      } catch (e) {}
+
+      // attempt to listen for project events via socket (server may not emit these but harmless if not)
+      try {
+        if (typeof io !== "undefined") {
+          const t = getToken();
+          const sock = io("/", { auth: { token: t }, transports: ["polling"] });
+          sock.on("project_created", (d) => {
+            loadProjects();
+            flash("Project created", "info", 2000);
+          });
+          sock.on("project_updated", (d) => {
+            loadProjects();
+            flash("Project updated", "info", 2000);
+          });
+          sock.on("project_deleted", (d) => {
+            loadProjects();
+            flash("Project deleted", "info", 2000);
+          });
+        }
+      } catch (e) {}
+
+      // role-aware redirect: check current user role and redirect to role-specific dashboard page if needed
+      async function getCurrentUser() {
+        try {
+          const endpoints = ["/api/auth/me", "/api/me", "/api/users/me"];
+          for (const url of endpoints) {
+            try {
+              const res = await fetch(url, { headers: { ...tokenHeader() } });
+              if (!res.ok) continue;
+              const body = await res.json();
+              const user = body.user || body;
+              if (user)
+                return {
+                  id: user.id ?? user._id,
+                  role:
+                    user.role ??
+                    user.type ??
+                    (Array.isArray(user.roles) ? user.roles[0] : undefined),
+                  name: user.name || user.email,
+                };
+            } catch (e) {}
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      // initialize
+      (async function init() {
+        const t = getToken();
+        if (!t) {
+          if (window.location.pathname === "/login") return;
+          return handleAuthFail("Please login first");
+        }
+        // prime users for filters
+        await populateAssigneeFilter();
+        // role redirect: if on root projects page and role suggests a different view, optionally redirect
+        try {
+          const user = await getCurrentUser();
+          if (user && user.role) {
+            // only redirect if currently on generic /dashboard (or you can customize)
+            if (window.location.pathname === "/dashboard") {
+              if (user.role.toLowerCase().includes("admin"))
+                safeRedirect("/dashboard/overview");
+              else if (
+                user.role.toLowerCase().includes("dev") ||
+                user.role.toLowerCase().includes("developer")
+              )
+                safeRedirect("/dashboard/assigned");
+              else if (
+                user.role.toLowerCase().includes("test") ||
+                user.role.toLowerCase().includes("tester")
+              )
+                safeRedirect("/dashboard/reported");
+            }
+          }
+        } catch (e) {}
+        loadProjects();
+      })();
+
+      // try to warm-load users once so Assign dropdown is ready quickly
+      (async function warmLoad() {
+        await ensureUsersLoaded();
+      })();
+    </script>
+  </body>
+</html>
