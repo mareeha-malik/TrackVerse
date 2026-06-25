@@ -33,17 +33,30 @@ class BugStatus:
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     email = db.Column(db.String(120), unique=True, nullable=False)
     name = db.Column(db.String(120))
-    password_hash = db.Column(db.String(128))
+
+    # Increased size to avoid PostgreSQL truncation errors
+    password_hash = db.Column(db.Text, nullable=False)
+
     role = db.Column(db.String(50), default=RoleEnum.DEVELOPER)
+
     is_active = db.Column(db.Boolean, default=True)
     email_confirmed = db.Column(db.Boolean, default=False)
+
     avatar = db.Column(db.String(256))
-    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+
+    created_at = db.Column(
+        db.DateTime,
+        default=lambda: datetime.now(timezone.utc)
+    )
 
     def set_password(self, pw):
-        self.password_hash = generate_password_hash(pw)
+        self.password_hash = generate_password_hash(
+            pw,
+            method="pbkdf2:sha256"
+        )
 
     def check_password(self, pw):
         return check_password_hash(self.password_hash, pw)
